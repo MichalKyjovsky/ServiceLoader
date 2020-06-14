@@ -9,10 +9,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class MyServiceLoader {
@@ -24,6 +21,7 @@ public class MyServiceLoader {
             List<T> clazzes = new ArrayList<>();
             String line = "";
             URLClassLoader urlClassLoader = getJarsFromClassPath();
+//            URLClassLoader urlClassLoader = getJarsFromClassLoader(); TODO: FIX
             while ((line = br.readLine()) != null) {
                 Class<?> cls = Class.forName(line, true, urlClassLoader);
                 if (cl.isAssignableFrom(cls)) {
@@ -52,5 +50,15 @@ public class MyServiceLoader {
             }
         }
         return URLClassLoader.newInstance(urls.toArray(new URL [0]));
+    }
+
+    private static URLClassLoader getJarsFromClassLoader() {
+        try {
+            Enumeration<URL> urls = ClassLoader.getSystemResources("jars");
+            return URLClassLoader.newInstance(Collections.list(urls).toArray(new URL[0]));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
