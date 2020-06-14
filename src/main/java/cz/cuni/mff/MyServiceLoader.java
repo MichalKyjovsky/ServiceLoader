@@ -1,6 +1,5 @@
 package cz.cuni.mff;
 
-import javax.naming.MalformedLinkException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,15 +13,15 @@ import java.util.stream.Collectors;
 
 public class MyServiceLoader {
 
-    private static final String PROJECT_PATH = System.getProperty("user.dir") + "\\" + "src\\META-INF\\services\\";
+    private static final String PROJECT_PATH = System.getProperty("user.dir") + "/" + "src/META-INF/services/";
 
     public static <T> Iterable<T> load(Class<T> cl) {
         try (BufferedReader br = new BufferedReader(new FileReader(PROJECT_PATH + cl.getName()))) {
             List<T> clazzes = new ArrayList<>();
             String line = "";
-            URLClassLoader urlClassLoader = getJarsFromClassPath();
-//            URLClassLoader urlClassLoader = getJarsFromClassLoader(); TODO: FIX
             while ((line = br.readLine()) != null) {
+                Enumeration<URL> urls = ClassLoader.getSystemResources("META-INF/services/" + line);
+                URLClassLoader urlClassLoader = URLClassLoader.newInstance(Collections.list(urls).toArray(new URL[0]));
                 Class<?> cls = Class.forName(line, true, urlClassLoader);
                 if (cl.isAssignableFrom(cls)) {
                     clazzes.add(cl.cast(cls.getDeclaredConstructor().newInstance()));
@@ -50,15 +49,5 @@ public class MyServiceLoader {
             }
         }
         return URLClassLoader.newInstance(urls.toArray(new URL [0]));
-    }
-
-    private static URLClassLoader getJarsFromClassLoader() {
-        try {
-            Enumeration<URL> urls = ClassLoader.getSystemResources("jars");
-            return URLClassLoader.newInstance(Collections.list(urls).toArray(new URL[0]));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 }
